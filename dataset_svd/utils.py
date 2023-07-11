@@ -9,15 +9,6 @@ import numpy as np
 import einops
 from fancy_einsum import einsum
 from typing import List, Optional, Callable, Tuple, Union
-import functools
-from tqdm import tqdm
-from IPython.display import display
-import random
-import os
-import matplotlib.pyplot as plt
-from sklearn.manifold import TSNE
-from sklearn.utils import shuffle
-import json
 
 
 from transformer_lens.hook_points import HookPoint
