@@ -12,6 +12,8 @@ from transformer_lens.utils import get_act_name
 
 from algebraic_value_editing.prompt_utils import get_block_name
 
+import dataset_svd.utils
+
 class ActivationAdditionDataset:
     """Specifies a prompt (e.g. "Bob went") and a coefficient and a
     location in the model, with an `int` representing the block_num in the
@@ -21,8 +23,8 @@ class ActivationAdditionDataset:
 
     coeff: float
     act_name: str
-    prompt: List[str]
-    tokens: List[Int[torch.Tensor, "seq"]]
+    text_dataset: List[str]
+    token_dataset: List[Int[torch.Tensor, "seq"]]
     from_dataset: bool
 
     def __init__(
@@ -76,6 +78,37 @@ class ActivationAdditionDataset:
             f"ActivationAddition({self.tokens}, {self.coeff}, {self.act_name})"
         )
 
+def activation_principal_component(
+    model: HookedTransformer, activation_addition: ActivationAdditionDataset
+) -> Float[torch.Tensor, "batch pos d_model"]:
+    """
+    Return the principal component of the activations for the given
+    `activation_addition` at some given layer of the model.
+    """
+    # Find the location we will look at
+    act_name = activation_addition.act_name
+
+    # Get the activations Tensor
+    activations = dataset_svd.utils.dataset_activations_optimised(
+        model=model, 
+        dataset=activation_addition.prompt,
+        act_name=act_name,
+        batch_size=2
+    )
+
+    # Do SVD
+    _, _, V_H = dataset_svd.utils.SVD(activations)
+
+    # Take the principal component
+    principal_component = V_H[0]
+
+    # This is essentially a 1-dim vector. Reshape it to be 3-dim,
+    # for consistency with the other activations
+    principal_component = principal_component.reshape(1, 1, -1)
+
+    # Return the principal component
+    return principal_component
+
 
 def get_dataset_activations(
     model: HookedTransformer, activation_addition: ActivationAdditionDataset
@@ -87,7 +120,7 @@ def get_dataset_activations(
     """
     # Get the principal component for the activations of this dataset at the relevant layer
     # TODO: Implement this method, decide if I want it to be a method
-    principal_component = activation_addition.get_principal_component()
+    principal_component = activation_principal_component(model, activation_addition)
     
     # Return cached activations times coefficient
     return activation_addition.coeff * principal_component
