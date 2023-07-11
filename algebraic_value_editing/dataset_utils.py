@@ -58,6 +58,7 @@ class ActivationAdditionDataset:
         # Set the activation name
         if isinstance(act_name, int):
             self.act_name = get_block_name(block_num=act_name)
+            self.location = self.act_name
         else:
             self.act_name = act_name
 
@@ -86,18 +87,18 @@ def activation_principal_component(
     `activation_addition` at some given layer of the model.
     """
     # Find the location we will look at
-    act_name = activation_addition.act_name
+    location = activation_addition.location
 
     # Get the activations Tensor
     activations = dataset_svd.utils.dataset_activations_optimised(
         model=model, 
         dataset=activation_addition.prompt,
-        act_name=act_name,
-        batch_size=2
+        location=location,
+        max_batch_size=2
     )
 
     # Find the average l2 norm of the rows of the activations
-    average_l2_norm = torch.mean(torch.linalg.norm(activations, p=2, dim=1))
+    average_l2_norm = torch.mean(torch.linalg.norm(activations, dim=1))
 
     # Do SVD
     _, _, V_H = dataset_svd.utils.SVD(activations)
