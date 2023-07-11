@@ -96,6 +96,10 @@ def activation_principal_component(
         batch_size=2
     )
 
+    # Find the average l2 norm of the rows of the activations
+    average_l2_norm = torch.mean(torch.linalg.norm(activations, p=2, dim=1))
+
+
     # Do SVD
     _, _, V_H = dataset_svd.utils.SVD(activations)
 
@@ -106,8 +110,8 @@ def activation_principal_component(
     # for consistency with the other activations
     principal_component = principal_component.reshape(1, 1, -1)
 
-    # Return the principal component
-    return principal_component
+    # Return the principal component scaled by the average l2 norm
+    return average_l2_norm * principal_component
 
 
 def get_dataset_activations(
