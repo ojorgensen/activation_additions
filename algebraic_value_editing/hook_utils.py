@@ -206,6 +206,7 @@ def hook_fn_from_activations(
         )
 
     activations_seq_len: int = activations.shape[1]
+    print(f"activations_seq_len: {activations_seq_len}")
 
     def prompt_hook(
         resid_pre: Float[torch.Tensor, "batch pos d_model"],
