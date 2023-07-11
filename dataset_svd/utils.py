@@ -117,6 +117,9 @@ def dataset_activations_optimised(
     # # Concatenate all activation tensors into a single tensor
     all_final_activations = t.cat(all_final_activations, dim=0)
 
+    if is_colab():
+        all_final_activations = all_final_activations.cuda()
+
     return all_final_activations
 
 def dataset_activations_optimised_locations(
