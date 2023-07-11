@@ -2,8 +2,8 @@
 Will contain the changes needed to perform activation interventions using PCA from datasets.
 """
 
-from typing import Tuple, Optional, Union, Callable, List, Float
-from jaxtyping import Int
+from typing import Tuple, Optional, Union, Callable, List
+from jaxtyping import Int, Float
 import torch
 import torch.nn.functional
 
@@ -98,7 +98,6 @@ def activation_principal_component(
 
     # Find the average l2 norm of the rows of the activations
     average_l2_norm = torch.mean(torch.linalg.norm(activations, p=2, dim=1))
-
 
     # Do SVD
     _, _, V_H = dataset_svd.utils.SVD(activations)
