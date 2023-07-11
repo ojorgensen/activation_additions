@@ -14,6 +14,10 @@ from algebraic_value_editing.prompt_utils import (
     pad_tokens_to_match_activation_additions,
     get_block_name,
 )
+from algebraic_value_editing.dataset_utils import(
+    ActivationAdditionDataset,
+    get_dataset_activations,
+)
 
 
 def get_prompt_activations(  # TODO rename
@@ -43,7 +47,7 @@ def get_prompt_activations(  # TODO rename
 
 
 def get_activation_dict(
-    model: HookedTransformer, activation_additions: List[ActivationAddition]
+    model: HookedTransformer, activation_additions: List[Union[ActivationAddition, ActivationAdditionDataset]]
 ) -> Dict[str, List[Float[torch.Tensor, "batch pos d_model"]]]:
     """Takes a list of `ActivationAddition`s and returns a dictionary mapping
     activation names to lists of activations.
@@ -55,9 +59,17 @@ def get_activation_dict(
 
     # Add activations for each prompt
     for activation_addition in activation_additions:
-        activation_dict[activation_addition.act_name].append(
-            get_prompt_activations(model, activation_addition)
-        )
+        # If the activation addition is based on a dataset,
+        # then we use our own functions to get the activations
+        if activation_addition.from_dataset:
+            activation_dict[activation_addition.act_name].append(
+                get_dataset_activations(model, activation_addition)
+            )  
+        # Otherwise, use normal prompt activations
+        else:
+            activation_dict[activation_addition.act_name].append(
+                get_prompt_activations(model, activation_addition)
+            )
 
     return activation_dict
 
