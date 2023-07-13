@@ -103,7 +103,7 @@ def activation_principal_component(
         location=location,
         max_batch_size=2,
         use_all_activations=activation_addition.use_all_activations,
-    )
+    ).cuda()
 
     # Find the average l2 norm of the rows of the activations
     average_l2_norm = torch.mean(torch.linalg.norm(activations, dim=1))
