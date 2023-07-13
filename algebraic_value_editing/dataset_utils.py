@@ -26,6 +26,7 @@ class ActivationAdditionDataset:
     text_dataset: List[str]
     token_dataset: List[Int[torch.Tensor, "seq"]]
     from_dataset: bool
+    use_all_activations: bool = False
 
     def __init__(
         self,
@@ -34,6 +35,7 @@ class ActivationAdditionDataset:
         prompt: Optional[List[str]] = None,
         tokens: Optional[List[Int[torch.Tensor, "seq"]]] = None,
         from_dataset: bool = True,
+        use_all_activations: bool = False,
     ):
         """Specifies a model location (`act_name`) from which to
         extract activations, which will then be multiplied by `coeff`.
@@ -72,6 +74,9 @@ class ActivationAdditionDataset:
         # Set whether this is from a dataset
         self.from_dataset = from_dataset
 
+        # Set whether to use all activations
+        self.use_all_activations = use_all_activations
+
     def __repr__(self) -> str:
         if hasattr(self, "prompt"):
             return f"ActivationAddition({self.prompt}, {self.coeff}, {self.act_name})"
@@ -89,12 +94,15 @@ def activation_principal_component(
     # Find the location we will look at
     location = activation_addition.location
 
+    print("Getting principal component!")
+
     # Get the activations Tensor
-    activations = dataset_svd.utils.dataset_activations_optimised(
+    activations = dataset_svd.utils.dataset_activations_optimised_new(
         model=model, 
         dataset=activation_addition.prompt,
         location=location,
-        max_batch_size=2
+        max_batch_size=2,
+        use_all_activations=activation_addition.use_all_activations,
     )
 
     # Find the average l2 norm of the rows of the activations

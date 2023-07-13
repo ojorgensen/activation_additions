@@ -122,6 +122,89 @@ def dataset_activations_optimised(
 
     return all_final_activations
 
+def select_vectors_parallel(indices, Y):
+    """
+    For each index, select every vector in Y up to and including the index.
+
+    Parameters
+    ----------
+    indices : torch.Tensor
+        Tensor of indices.
+    Y : torch.Tensor
+        Tensor of shape (batch, length, dimension).
+
+    Returns
+    -------
+    torch.Tensor
+        Stacked vectors.
+    """
+    assert len(indices.shape) == 1, "Indices tensor should be 1D"
+    assert len(Y.shape) == 3, "Y tensor should be 3D"
+    assert indices.shape[0] == Y.shape[0], "Batch size should match"
+
+    # Create a mask of shape (batch, length)
+    mask = t.arange(Y.shape[1]).expand(indices.shape[0], Y.shape[1]).to(Y.device) <= indices.unsqueeze(1)
+
+    # Expand mask to match the shape of Y
+    mask = mask.unsqueeze(2).expand_as(Y)
+
+    # Apply mask and remove extra dimensions
+    selected_vectors = Y[mask].view(-1, Y.shape[-1])
+
+    return selected_vectors
+
+def dataset_activations_optimised_new(
+  model: HookedTransformer,
+  dataset: List[str],
+  location: str,
+  max_batch_size: int,
+  use_all_activations: bool = False
+):
+  """
+  Note: this function has been updated to also return all activations, if we want it to do this
+
+  """
+  num_batches = (len(dataset) + max_batch_size - 1) // max_batch_size
+  all_activations = []
+
+  # Process each batch
+  for batch_idx in range(num_batches):
+    t.cuda.empty_cache()
+    # print("batch_idx be: ", batch_idx)
+    # Determine the start and end index for this batch
+    start_idx = batch_idx * max_batch_size
+    end_idx = min(start_idx + max_batch_size, len(dataset))
+
+    # Extract the subset of the dataset for this batch
+    batch_subset = dataset[start_idx:end_idx]
+
+    # Tokenise the batch, form a batch tensor
+    batch_tokens = model.to_tokens(batch_subset)
+
+    mask = batch_tokens != 50256
+    final_indices = ((mask.cumsum(dim=1) == mask.sum(dim=1).unsqueeze(1)).int()).argmax(dim=1)
+    final_indices = final_indices.view(-1,1)
+
+    # print(batch_tokens)
+    # Feed the tensor through the model
+    _, cache = model.run_with_cache(batch_tokens, return_cache_object=True, remove_batch_dim=False)
+    activations = cache[location]
+    if use_all_activations:
+      output_activations = select_vectors_parallel(final_indices.squeeze(), activations).cpu()
+    else:
+      index_expanded = final_indices.unsqueeze(-1).expand(-1, -1, activations.size(2))
+      # print("index_expanded: ", index_expanded)
+      final_activations = t.gather(activations, 1, index_expanded)
+      # Move the activations to the CPU and store them
+      final_activations = final_activations.cpu()
+      output_activations = final_activations.squeeze()
+
+    all_activations.append(output_activations)
+
+  all_activations = t.cat(all_activations, dim=0)
+
+  return all_activations
+
 def dataset_activations_optimised_locations(
     model: HookedTransformer,
     dataset: List[str],
