@@ -37,6 +37,8 @@ class ActivationAdditionDataset:
         from_dataset: bool = True,
         use_all_activations: bool = False,
         prompt_2: Optional[List[str]] = None,
+        from_pca: bool = True,
+        from_difference: bool = False,
     ):
         """Specifies a model location (`act_name`) from which to
         extract activations, which will then be multiplied by `coeff`.
@@ -80,6 +82,12 @@ class ActivationAdditionDataset:
 
         # Set the second dataset (may be None)
         self.prompt_2 = prompt_2
+
+        # Set whether this is from PCA
+        self.from_pca = from_pca
+
+        # Set whether this is from a difference
+        self.from_difference = from_difference
 
     def __repr__(self) -> str:
         if hasattr(self, "prompt"):
@@ -164,3 +172,5 @@ def get_dataset_activations_difference(
         max_batch_size=2,
         use_all_activations = use_all_activations,
     )
+
+    return activation_addition.coeff * feature_vector
