@@ -36,6 +36,7 @@ class ActivationAdditionDataset:
         tokens: Optional[List[Int[torch.Tensor, "seq"]]] = None,
         from_dataset: bool = True,
         use_all_activations: bool = False,
+        prompt_2: Optional[List[str]] = None,
     ):
         """Specifies a model location (`act_name`) from which to
         extract activations, which will then be multiplied by `coeff`.
@@ -76,6 +77,9 @@ class ActivationAdditionDataset:
 
         # Set whether to use all activations
         self.use_all_activations = use_all_activations
+
+        # Set the second dataset (may be None)
+        self.prompt_2 = prompt_2
 
     def __repr__(self) -> str:
         if hasattr(self, "prompt"):
@@ -125,8 +129,8 @@ def activation_principal_component(
 def get_dataset_activations(
     model: HookedTransformer, activation_addition: ActivationAdditionDataset
 ) -> Float[torch.Tensor, "batch pos d_model"]:
-    """Takes a `ActivationAddition` and returns the rescaled activations for that
-    prompt, for the appropriate `act_name`. Rescaling is done by running
+    """Takes a `ActivationAddition` and returns the principal component of the activations
+    of the dataset, for the appropriate `act_name`. Rescaling is done by running
     the model forward with the prompt and then multiplying the
     activations by the coefficient `activation_addition.coeff`.
     """
@@ -136,3 +140,27 @@ def get_dataset_activations(
     
     # Return cached activations times coefficient
     return activation_addition.coeff * principal_component
+
+def get_dataset_activations_difference(
+    model: HookedTransformer, activation_addition: ActivationAdditionDataset
+) -> Float[torch.Tensor, "batch pos d_model"]:
+    """Takes a `ActivationAddition` and returns the difference between the centres of the 
+    activations of the two relevant datasets, for the appropriate `act_name`.
+    Rescaling is done by running the model forward with the prompt and then multiplying the
+    activations by the coefficient `activation_addition.coeff`.
+    """
+    assert activation_addition.prompt_2 is not None, "Must specify a second prompt to use this method."
+
+    target_dataset = activation_addition.prompt
+    baseline_dataset = activation_addition.prompt_2
+    location = activation_addition.location
+    use_all_activations = activation_addition.use_all_activations
+
+    feature_vector = dataset_svd.utils.find_activations_centre_diff(
+        model=model,
+        target_dataset=target_dataset,
+        baseline_dataset=baseline_dataset,
+        location=location,
+        max_batch_size=2,
+        use_all_activations = use_all_activations,
+    )

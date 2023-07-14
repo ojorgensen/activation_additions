@@ -17,6 +17,7 @@ from algebraic_value_editing.prompt_utils import (
 from algebraic_value_editing.dataset_utils import(
     ActivationAdditionDataset,
     get_dataset_activations,
+    get_dataset_activations_difference,
 )
 
 
@@ -62,9 +63,17 @@ def get_activation_dict(
         # If the activation addition is based on a dataset,
         # then we use our own functions to get the activations
         if activation_addition.from_dataset:
-            activation_dict[activation_addition.act_name].append(
-                get_dataset_activations(model, activation_addition)
-            )  
+            if activation_addition.from_pca:
+                activation_dict[activation_addition.act_name].append(
+                    get_dataset_activations(model, activation_addition)
+                )
+            elif activation_addition.from_difference:
+                activation_dict[activation_addition.act_name].append(
+                    get_dataset_activations_difference(model, activation_addition)
+                )
+        
+
+            
         # Otherwise, use normal prompt activations
         else:
             activation_dict[activation_addition.act_name].append(

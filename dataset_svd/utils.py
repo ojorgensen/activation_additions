@@ -406,3 +406,62 @@ def matrix_error(
     sum_of_norms = t.sum(norms)
 
     return sum_of_norms
+
+def find_activations_centre(
+  model: HookedTransformer,
+  dataset: List[str],
+  location: str,
+  max_batch_size: int,
+  use_all_activations: bool = False
+):
+  """
+  Find the centre of the activations of a dataset, at some
+  layer of a certain model.
+  """
+  all_activations = dataset_activations_optimised_new(
+    model,
+    dataset,
+    location,
+    max_batch_size,
+    use_all_activations
+  )
+
+  # Find the mean
+  mean = t.mean(all_activations, dim=0)
+
+
+  return mean
+
+def find_activations_centre_diff(
+  model: HookedTransformer,
+  target_dataset: List[str],
+  baseline_dataset: List[str],
+  location: str,
+  max_batch_size: int,
+  use_all_activations: bool = False
+):
+  """
+  Find the centre of the activations of the baseline dataset,
+  take this away from the centre of the activations of a second dataset.
+
+  Return the resulting difference vector
+  """
+
+  baseline_centre = find_activations_centre(
+    model,
+    baseline_dataset,
+    location,
+    max_batch_size,
+    use_all_activations
+  )
+
+  baseline_target = find_activations_centre(
+    model,
+    target_dataset,
+    location,
+    max_batch_size,
+    use_all_activations
+  )
+
+  difference = baseline_target - baseline_centre
+  return difference
