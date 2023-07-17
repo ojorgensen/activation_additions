@@ -190,6 +190,8 @@ def dataset_activations_optimised_new(
     _, cache = model.run_with_cache(batch_tokens, return_cache_object=True, remove_batch_dim=False)
     activations = cache[location]
     if use_all_activations:
+      print("final_indices are: ", final_indices)
+      print("final indices shape be: ", final_indices.shape)
       output_activations = select_vectors_parallel(final_indices.squeeze(), activations).cpu()
     else:
       index_expanded = final_indices.unsqueeze(-1).expand(-1, -1, activations.size(2))
