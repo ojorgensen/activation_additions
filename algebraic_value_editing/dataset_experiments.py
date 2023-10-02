@@ -122,23 +122,23 @@ def run_corpus_logprob_experiment(
     #     lambda inp: inp[mask_pos:].mean()
     # )
     # Group results by label, coeff and act_name, and take the sum
-    results_grouped_df = (
-        mod_df.groupby(["act_name", "coeff", label_col])
-        .sum(numeric_only=True)
-        .reset_index()
-    )[
-        [
-            "act_name",
-            "coeff",
-            label_col,
-            "logprob_actual_next_token_diff_sum",
-            "logprob_actual_next_token_count",
-        ]
-    ]
-    # Calculate the mean
-    results_grouped_df["logprob_actual_next_token_diff_mean"] = (
-        results_grouped_df["logprob_actual_next_token_diff_sum"]
-        / results_grouped_df["logprob_actual_next_token_count"]
-    )
+    # results_grouped_df = (
+    #     mod_df.groupby(["act_name", "coeff", label_col])
+    #     .sum(numeric_only=True)
+    #     .reset_index()
+    # )[
+    #     [
+    #         "act_name",
+    #         "coeff",
+    #         label_col,
+    #         "logprob_actual_next_token_diff_sum",
+    #         "logprob_actual_next_token_count",
+    #     ]
+    # ]
+    # # Calculate the mean
+    # results_grouped_df["logprob_actual_next_token_diff_mean"] = (
+    #     results_grouped_df["logprob_actual_next_token_diff_sum"]
+    #     / results_grouped_df["logprob_actual_next_token_count"]
+    # )
     # Return the results
-    return mod_df, results_grouped_df
+    return mod_df #, results_grouped_df
