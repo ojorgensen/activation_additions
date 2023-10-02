@@ -190,8 +190,8 @@ def dataset_activations_optimised_new(
     _, cache = model.run_with_cache(batch_tokens, return_cache_object=True, remove_batch_dim=False)
     activations = cache[location]
     if use_all_activations:
-      print("final_indices are: ", final_indices)
-      print("final indices shape be: ", final_indices.shape)
+      # print("final_indices are: ", final_indices)
+      # print("final indices shape be: ", final_indices.shape)
       output_activations = select_vectors_parallel(final_indices.squeeze(), activations).cpu()
     else:
       index_expanded = final_indices.unsqueeze(-1).expand(-1, -1, activations.size(2))
@@ -333,11 +333,11 @@ def activation_SVD_covariance(
     _, cache = dataset_activations_tokens(model, dataset_tokens)
     activation_cache = cache[location]
     squeezed_activations = reshape_activations(activation_cache)
-    print(squeezed_activations.shape)
+    #print(squeezed_activations.shape)
     mean_activation = squeezed_activations.mean(dim=0, keepdim=True)
     centred_activations = squeezed_activations - mean_activation
     covariance_matrix = centred_activations.T @ centred_activations
-    print(covariance_matrix.shape)
+    #print(covariance_matrix.shape)
     U, S, V_H = SVD(covariance_matrix)
     return U, S, V_H
 

@@ -89,6 +89,10 @@ class ActivationAdditionDataset:
         # Set whether this is from a difference
         self.from_difference = from_difference
 
+        self.cache = None
+
+
+
     def __repr__(self) -> str:
         if hasattr(self, "prompt"):
             return f"ActivationAddition({self.prompt}, {self.coeff}, {self.act_name})"
@@ -115,7 +119,7 @@ def activation_principal_component(
         location=location,
         max_batch_size=2,
         use_all_activations=activation_addition.use_all_activations,
-    ).cuda()
+    )
 
     # Find the average l2 norm of the rows of the activations
     average_l2_norm = torch.mean(torch.linalg.norm(activations, dim=1))
@@ -171,6 +175,10 @@ def get_dataset_activations_difference(
         location=location,
         max_batch_size=2,
         use_all_activations = use_all_activations,
-    ).reshape(1, 1, -1).cuda()
+    ).reshape(1, 1, -1)
 
-    return activation_addition.coeff * feature_vector
+    steering_vector = activation_addition.coeff * feature_vector
+
+    activation_addition.cache = steering_vector
+
+    return steering_vector
