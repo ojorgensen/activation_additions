@@ -91,12 +91,7 @@ def run_corpus_logprob_experiment(
         lsuffix="_mod",
         rsuffix="_norm",
     )
-    # Join in the ActivationAddition parameters
-    mod_df = mod_df.join(
-        activation_additions_df, on="activation_addition_index"
-    )
-    # Join in the input label
-    mod_df = mod_df.join(labeled_texts[[label_col]], on="input_index")
+
     # Add loss diff column
     mod_df["logprob_actual_next_token_diff"] = (
         mod_df["logprob_actual_next_token_mod"]
